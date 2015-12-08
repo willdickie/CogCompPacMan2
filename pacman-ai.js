@@ -42,6 +42,8 @@ var PACAI =  (function (Pacman) {
 	function createNewGeneration(super1, super2){
 		
 		var newGeneration = [];
+		newGeneration.append(super1);
+		newGeneration.append(super2);
 		for(int i = 0; i<5;i++){
 			newGeneration.append(createMutation(super1));
 		}
@@ -53,13 +55,13 @@ var PACAI =  (function (Pacman) {
 	}
 	function createMutation(super){
 		var mutationRate = 4.2;
-		var rand = Math.Random(0,100);
+		var rand = Math.random()*100;
 		var temp[];
 		temp[0] = 0;
 		temp[1] = []
 		for(int i = 0; i < 3;i++){
 				if(rand < mutationRate){
-					temp[1][i] = super[1][i] + super[1][i] * Math.Random(-.1,.1);
+					temp[1][i] = super[1][i] + super[1][i] * (Math.random() * (.1- -.1) + -.1);
 				}else{
 					temp[1][i] = suer[1][i]
 				}
