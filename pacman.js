@@ -647,6 +647,10 @@ Pacman.Map = function (size) {
 	    }
     };
     
+    function getCurrentMap() {
+        return map;
+    }
+    
     function drawBlock(y, x, ctx) {
 
         var layout = map[y][x];
@@ -687,7 +691,8 @@ Pacman.Map = function (size) {
         "isFloorSpace" : isFloorSpace,
         "height"       : height,
         "width"        : width,
-        "blockSize"    : blockSize
+        "blockSize"    : blockSize,
+        "getCurrentMap": getCurrentMap          
     };
 };
 
@@ -1048,7 +1053,7 @@ var PACMAN = (function () {
         ctx  = canvas.getContext('2d');
 
         audio = new Pacman.Audio({"soundDisabled":soundDisabled});
-        map   = new Pacman.Map(blockSize);
+        Pacman.map = map = new Pacman.Map(blockSize);
         user  = new Pacman.User({ 
             "completedLevel" : completedLevel, 
             "eatenPill"      : eatenPill 

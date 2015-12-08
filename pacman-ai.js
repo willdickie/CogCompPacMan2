@@ -87,6 +87,7 @@ var PACAI =  (function (PacmanInternal) {
 			};
 			ghostDistances.push(dist);
 		}
+		//console.log(Pacman.map.getCurrentMap());
 	}
 	
 	startAI();
