@@ -144,7 +144,6 @@ Pacman.Ghost = function (game, map, colour) {
     };
 
     function draw(ctx) {
-  
         var s    = map.blockSize, 
             top  = (position.y/10) * s,
             left = (position.x/10) * s;
@@ -923,6 +922,7 @@ var PACMAN = (function () {
         for (i = 0, len = ghosts.length; i < len; i += 1) {
             ghostPos.push(ghosts[i].move(ctx));
         }
+	
         u = user.move(ctx);
         
         for (i = 0, len = ghosts.length; i < len; i += 1) {
@@ -936,7 +936,7 @@ var PACMAN = (function () {
         user.draw(ctx);
         
         userPos = u["new"];
-        
+        window.onNewMap(ghostPos, userPos, ghosts);
         for (i = 0, len = ghosts.length; i < len; i += 1) {
             if (collided(userPos, ghostPos[i]["new"])) {
                 if (ghosts[i].isVunerable()) { 

@@ -22,5 +22,13 @@ var PACAI =  (function (Pacman) {
 	function virtualKeyRaw(char) {
 		return {keyCode:char};
 	}
+	
+	window.onNewMap = function (map, userPos, ghosts) {		
+		for(var i=0;i<ghosts.length;i++){
+			console.log(ghosts[i].isVunerable());
+		}
+		console.log(map, userPos, ghosts);
+	}
+	
 	startAI();
 })
