@@ -36,7 +36,7 @@ var PACAI =  (function (Pacman) {
 	        return 0;
 	    }
 	    else {
-	        return (a[0] < b[0]) ? -1 : 1;
+	        return (a[0] > b[0]) ? -1 : 1;
 	    }
 	}
 	function createNewGeneration(super1, super2){
