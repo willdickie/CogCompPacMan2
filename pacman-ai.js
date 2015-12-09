@@ -1,5 +1,22 @@
 var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
+	var PILL_TOP_LEFT = {
+		x: 1,
+		y: 2
+	};
+	var PILL_TOP_RIGHT = {
+		x: 17,
+		y: 2
+	};
+	var PILL_BOT_LEFT = {
+		x: 1,
+		y: 16
+	};
+	var PILL_BOT_RIGHT = {
+		x: 17,
+		y: 16
+	};
+	var PILLS = [PILL_TOP_LEFT, PILL_TOP_RIGHT, PILL_BOT_LEFT, PILL_BOT_RIGHT];
 	
 	function startAI() {
 		startGame();
@@ -87,7 +104,34 @@ var PACAI =  (function (PacmanInternal) {
 			};
 			ghostDistances.push(dist);
 		}
-		//console.log(Pacman.map.getCurrentMap());
+
+		// Get relative positions between Pacman and each power pill
+		var pacMap = Pacman.map.getCurrentMap();
+		var pillPositions = [];
+		for(var i=0; i<PILLS.length; i++){
+			if( pacMap[PILLS[i].y][PILLS[i].x] == 4 ){
+				var posPill = {
+					x: userPos.x - PILLS[i].x,
+					y: userPos.y - PILLS[i].y
+				};
+				pillPositions.push(posPill);
+			}
+		}
+
+		// Get distances between Pacman and each power pill
+		var pillDistances = [];
+		for(var i=0; i<PILLS.length; i++){
+			if( pacMap[PILLS[i].y][PILLS[i].x] == 4 ){
+				var startUser = graph.grid[userPos.y][userPos.x];
+				var endPill = graph.grid[PILLS[i].y][PILLS[i].x];
+				var distResult = astar.search(graph, startUser, endPill);
+				var distToPill = distResult.length;
+				pillDistances.push(distToPill)
+			}
+		}
+
+		
+
 	}
 	
 	startAI();
