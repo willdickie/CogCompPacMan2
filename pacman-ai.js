@@ -135,10 +135,10 @@ var PACAI =  (function (PacmanInternal) {
 		var pelletCoords = [];
 		for(var i=0; i < pacMap.length; i++){
 			for(var j=0; j < pacMap[i].length; j++){
-				if(pacMap[i][j] == 1){
+				if(pacMap[i][j] == Pacman.BISCUIT){
 					var pellet = {
-						x: i,
-						y: j
+						x: j,
+						y: i
 					};
 					pelletCoords.push(pellet);
 				}
@@ -175,7 +175,31 @@ var PACAI =  (function (PacmanInternal) {
 			}
 		}
 
-
+		//Get surrounding squares
+		// 0 means square cannot be moved to
+		// 1 means square can be moved to
+		var surroundings = {
+			leftMove:0,
+			rightMove:0,
+			downMove:0,
+			upMove:0
+		};
+		if(userPos.x-1 >= 0 && (pacMap[userPos.y][userPos.x-1] == Pacman.BISCUIT 
+			|| pacMap[userPos.y][userPos.x-1] == Pacman.PILL)){
+			surroundings.leftMove = 1;
+		}
+		if(userPos.x+1 < pacMap[0].length && (pacMap[userPos.y][userPos.x+1] == Pacman.BISCUIT 
+			|| pacMap[userPos.y][userPos.x+1] == Pacman.PILL) ){
+			surroundings.rightMove = 1;
+		}
+		if(userPos.y-1 >= 0 && (pacMap[userPos.y-1][userPos.x] == Pacman.BISCUIT 
+			|| pacMap[userPos.y-1][userPos.x] == Pacman.PILL)){
+			surroundings.upMove = 1;
+		}
+		if(userPos.y+1 < pacMap.length && (pacMap[userPos.y+1][userPos.x] == Pacman.BISCUIT 
+			|| pacMap[userPos.y+1][userPos.x] == Pacman.PILL)){
+			surroundings.downMove = 1;
+		}
 	}
 	
 	startAI();
