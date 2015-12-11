@@ -109,19 +109,20 @@ var PACAI =  (function (PacmanInternal) {
 		var pacMap = Pacman.map.getCurrentMap();
 		var pillPositions = [];
 		for(var i=0; i<PILLS.length; i++){
-			if( pacMap[PILLS[i].y][PILLS[i].x] == 4 ){
+			if( pacMap[PILLS[i].y][PILLS[i].x] == Pacman.PILL ){
 				var posPill = {
 					x: userPos.x - PILLS[i].x,
 					y: userPos.y - PILLS[i].y
 				};
 				pillPositions.push(posPill);
+				console.log(posPill);
 			}
 		}
 
 		// Get distances between Pacman and each power pill
 		var pillDistances = [];
 		for(var i=0; i<PILLS.length; i++){
-			if( pacMap[PILLS[i].y][PILLS[i].x] == 4 ){
+			if( pacMap[PILLS[i].y][PILLS[i].x] == Pacman.PILL ){
 				var startUser = graph.grid[userPos.y][userPos.x];
 				var endPill = graph.grid[PILLS[i].y][PILLS[i].x];
 				var distResult = astar.search(graph, startUser, endPill);
@@ -130,7 +131,50 @@ var PACAI =  (function (PacmanInternal) {
 			}
 		}
 
-		
+		// Get x and y coordinates of each pellet
+		var pelletCoords = [];
+		for(var i=0; i < pacMap.length; i++){
+			for(var j=0; j < pacMap[i].length; j++){
+				if(pacMap[i][j] == 1){
+					var pellet = {
+						x: i,
+						y: j
+					};
+					pelletCoords.push(pellet);
+				}
+			}
+		}
+
+		//Get relative positions between Pacman and each pellet
+		var pelletPositions = [];
+		for(var i=0; i<pelletCoords.length; i++){
+			var posPellet = {
+				x: userPos.x - pelletCoords[i].x,
+				y: userPos.y - pelletCoords[i].y
+			};
+			pelletPositions.push(posPellet);
+		}
+
+		//Get distances between Pacman and each pellet
+		var pelletDistances = [];
+		var minDist = {
+			x: 0,
+			y: 0,
+			minVal: 1000000
+		};
+		for(var i=0; i<pelletCoords.length; i++){
+			var startUser2 = graph.grid[userPos.y][userPos.x];
+			var endPellet = graph.grid[pelletCoords[i].x][pelletCoords[i].y];
+			var distPellResult = astar.search(graph, startUser2, endPellet);
+			var distToPell = distPellResult.length;
+			pelletDistances.push(distToPell);
+			if( distToPell <= minDist.min ){
+				minDist.minVal = distToPell;
+				minDist.x = pelletCoords[i].x;
+				minDist.y = pelletCoords[i].y;
+			}
+		}
+
 
 	}
 	
