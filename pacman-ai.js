@@ -1,5 +1,22 @@
 var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
+	var PILL_TOP_LEFT = {
+		x: 1,
+		y: 2
+	};
+	var PILL_TOP_RIGHT = {
+		x: 17,
+		y: 2
+	};
+	var PILL_BOT_LEFT = {
+		x: 1,
+		y: 16
+	};
+	var PILL_BOT_RIGHT = {
+		x: 17,
+		y: 16
+	};
+	var PILLS = [PILL_TOP_LEFT, PILL_TOP_RIGHT, PILL_BOT_LEFT, PILL_BOT_RIGHT];
 	
 	function startAI() {
 		startGame();
@@ -87,7 +104,112 @@ var PACAI =  (function (PacmanInternal) {
 			};
 			ghostDistances.push(dist);
 		}
-		//console.log(Pacman.map.getCurrentMap());
+
+		// Get relative positions between Pacman and each power pill
+		var pacMap = Pacman.map.getCurrentMap();
+		var pillPositions = [];
+		for(var i=0; i<PILLS.length; i++){
+			if( pacMap[PILLS[i].y][PILLS[i].x] == Pacman.PILL ){
+				var posPill = {
+					x: userPos.x - PILLS[i].x,
+					y: userPos.y - PILLS[i].y
+				};
+				pillPositions.push(posPill);
+			}
+		}
+
+		// Get distances between Pacman and each power pill
+		var pillDistances = [];
+		var minPillDist = {
+			x: 1000000,
+			y: 1000000,
+			minVal: 1000000
+		};
+		for(var i=0; i<PILLS.length; i++){
+			if( pacMap[PILLS[i].y][PILLS[i].x] == Pacman.PILL ){
+				var startUser = graph.grid[userPos.y][userPos.x];
+				var endPill = graph.grid[PILLS[i].y][PILLS[i].x];
+				var distResult = astar.search(graph, startUser, endPill);
+				var distToPill = distResult.length;
+				pillDistances.push(distToPill);
+				if( distToPill <= minPillDist.minVal )
+				{
+					minPillDist.minVal = distToPill;
+					minPillDist.x = PILLS[i].x;
+					minPillDist.y = PILLS[i].y;
+				}
+			}
+		}
+
+		// Get x and y coordinates of each pellet
+		var pelletCoords = [];
+		for(var i=0; i < pacMap.length; i++){
+			for(var j=0; j < pacMap[i].length; j++){
+				if(pacMap[i][j] == Pacman.BISCUIT){
+					var pellet = {
+						x: j,
+						y: i
+					};
+					pelletCoords.push(pellet);
+				}
+			}
+		}
+
+		//Get relative positions between Pacman and each pellet
+		var pelletPositions = [];
+		for(var i=0; i<pelletCoords.length; i++){
+			var posPellet = {
+				x: userPos.x - pelletCoords[i].x,
+				y: userPos.y - pelletCoords[i].y
+			};
+			pelletPositions.push(posPellet);
+		}
+
+		//Get distances between Pacman and each pellet
+		var pelletDistances = [];
+		var minPellDist = {
+			x: 1000000,
+			y: 1000000,
+			minVal: 1000000
+		};
+		for(var i=0; i<pelletCoords.length; i++){
+			var startUser2 = graph.grid[userPos.y][userPos.x];
+			var endPellet = graph.grid[pelletCoords[i].y][pelletCoords[i].x];
+			var distPellResult = astar.search(graph, startUser2, endPellet);
+			var distToPell = distPellResult.length;
+			pelletDistances.push(distToPell);
+			if( distToPell <= minPellDist.min ){
+				minPellDist.minVal = distToPell;
+				minPellDist.x = pelletCoords[i].x;
+				minPellDist.y = pelletCoords[i].y;
+			}
+		}
+
+		//Get surrounding squares
+		// 0 means square cannot be moved to
+		// 1 means square can be moved to
+		var surroundings = {
+			leftMove:0,
+			rightMove:0,
+			downMove:0,
+			upMove:0
+		};
+		if(userPos.x-1 >= 0 && (pacMap[userPos.y][userPos.x-1] != Pacman.WALL 
+			&& pacMap[userPos.y][userPos.x-1] != Pacman.BLOCK)){
+			surroundings.leftMove = 1;
+		}
+		if(userPos.x+1 < pacMap[0].length && (pacMap[userPos.y][userPos.x+1] != Pacman.WALL 
+			&& pacMap[userPos.y][userPos.x+1] != Pacman.BLOCK) ){
+			surroundings.rightMove = 1;
+		}
+		if(userPos.y-1 >= 0 && (pacMap[userPos.y-1][userPos.x] != Pacman.WALL 
+			&& pacMap[userPos.y-1][userPos.x] != Pacman.BLOCK)){
+			surroundings.upMove = 1;
+		}
+		if(userPos.y+1 < pacMap.length && (pacMap[userPos.y+1][userPos.x] != Pacman.WALL 
+			&& pacMap[userPos.y+1][userPos.x] != Pacman.BLOCK)){
+			surroundings.downMove = 1;
+		}
 	}
 	
 	startAI();
