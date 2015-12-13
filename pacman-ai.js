@@ -66,7 +66,14 @@ var PACAI =  (function (PacmanInternal) {
 			y: Math.round(pos.y / 10)
 		}
 	}
-	
+	function shouldDo (weight) {
+		return Math.random() < weight;
+	}
+
+	function getWeight (scorerName, proxGhost,ghostDanger,proxPowerPellet,moveArray) {
+		
+		// body...
+	}
 	window.onNewMap = function (ghostPos, userPos, ghosts) {
 		// Adjust user position
 		userPos = adjustPositionToBlockSize(userPos);

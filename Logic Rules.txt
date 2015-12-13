@@ -1,0 +1,3 @@
+ghost_near	pac_near
+ghost_med	pac_med
+ghost_far	pac_far
