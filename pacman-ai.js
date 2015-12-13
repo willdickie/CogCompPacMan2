@@ -115,7 +115,6 @@ var PACAI =  (function (PacmanInternal) {
 					y: userPos.y - PILLS[i].y
 				};
 				pillPositions.push(posPill);
-				console.log(posPill);
 			}
 		}
 
