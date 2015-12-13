@@ -121,13 +121,24 @@ var PACAI =  (function (PacmanInternal) {
 
 		// Get distances between Pacman and each power pill
 		var pillDistances = [];
+		var minPillDist = {
+			x: 1000000,
+			y: 1000000,
+			minVal: 1000000
+		};
 		for(var i=0; i<PILLS.length; i++){
 			if( pacMap[PILLS[i].y][PILLS[i].x] == Pacman.PILL ){
 				var startUser = graph.grid[userPos.y][userPos.x];
 				var endPill = graph.grid[PILLS[i].y][PILLS[i].x];
 				var distResult = astar.search(graph, startUser, endPill);
 				var distToPill = distResult.length;
-				pillDistances.push(distToPill)
+				pillDistances.push(distToPill);
+				if( distToPill <= minPillDist.minVal )
+				{
+					minPillDist.minVal = distToPill;
+					minPillDist.x = PILLS[i].x;
+					minPillDist.y = PILLS[i].y;
+				}
 			}
 		}
 
@@ -157,21 +168,21 @@ var PACAI =  (function (PacmanInternal) {
 
 		//Get distances between Pacman and each pellet
 		var pelletDistances = [];
-		var minDist = {
-			x: 0,
-			y: 0,
+		var minPellDist = {
+			x: 1000000,
+			y: 1000000,
 			minVal: 1000000
 		};
 		for(var i=0; i<pelletCoords.length; i++){
 			var startUser2 = graph.grid[userPos.y][userPos.x];
-			var endPellet = graph.grid[pelletCoords[i].x][pelletCoords[i].y];
+			var endPellet = graph.grid[pelletCoords[i].y][pelletCoords[i].x];
 			var distPellResult = astar.search(graph, startUser2, endPellet);
 			var distToPell = distPellResult.length;
 			pelletDistances.push(distToPell);
-			if( distToPell <= minDist.min ){
-				minDist.minVal = distToPell;
-				minDist.x = pelletCoords[i].x;
-				minDist.y = pelletCoords[i].y;
+			if( distToPell <= minPellDist.min ){
+				minPellDist.minVal = distToPell;
+				minPellDist.x = pelletCoords[i].x;
+				minPellDist.y = pelletCoords[i].y;
 			}
 		}
 
