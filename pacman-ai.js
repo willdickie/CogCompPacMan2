@@ -184,20 +184,20 @@ var PACAI =  (function (PacmanInternal) {
 			downMove:0,
 			upMove:0
 		};
-		if(userPos.x-1 >= 0 && (pacMap[userPos.y][userPos.x-1] == Pacman.BISCUIT 
-			|| pacMap[userPos.y][userPos.x-1] == Pacman.PILL)){
+		if(userPos.x-1 >= 0 && (pacMap[userPos.y][userPos.x-1] != Pacman.WALL 
+			&& pacMap[userPos.y][userPos.x-1] != Pacman.BLOCK)){
 			surroundings.leftMove = 1;
 		}
-		if(userPos.x+1 < pacMap[0].length && (pacMap[userPos.y][userPos.x+1] == Pacman.BISCUIT 
-			|| pacMap[userPos.y][userPos.x+1] == Pacman.PILL) ){
+		if(userPos.x+1 < pacMap[0].length && (pacMap[userPos.y][userPos.x+1] != Pacman.WALL 
+			&& pacMap[userPos.y][userPos.x+1] != Pacman.BLOCK) ){
 			surroundings.rightMove = 1;
 		}
-		if(userPos.y-1 >= 0 && (pacMap[userPos.y-1][userPos.x] == Pacman.BISCUIT 
-			|| pacMap[userPos.y-1][userPos.x] == Pacman.PILL)){
+		if(userPos.y-1 >= 0 && (pacMap[userPos.y-1][userPos.x] != Pacman.WALL 
+			&& pacMap[userPos.y-1][userPos.x] != Pacman.BLOCK)){
 			surroundings.upMove = 1;
 		}
-		if(userPos.y+1 < pacMap.length && (pacMap[userPos.y+1][userPos.x] == Pacman.BISCUIT 
-			|| pacMap[userPos.y+1][userPos.x] == Pacman.PILL)){
+		if(userPos.y+1 < pacMap.length && (pacMap[userPos.y+1][userPos.x] != Pacman.WALL 
+			&& pacMap[userPos.y+1][userPos.x] != Pacman.BLOCK)){
 			surroundings.downMove = 1;
 		}
 	}
