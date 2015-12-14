@@ -129,10 +129,16 @@ Pacman.Ghost = function (game, map, colour) {
     function secondsAgo(tick) { 
         return (game.getTick() - tick) / Pacman.FPS;
     };
+    function fastSeconds (seconds) {
+        
+        var value = ( 30/Pacman.FPS) * seconds; 
+        console.log(seconds  +" " + value)
+        return  value;
+    }
 
     function getColour() { 
         if (eatable) { 
-            if (secondsAgo(eatable) > 5) { 
+            if (secondsAgo(eatable) > fastSeconds(5)) { 
                 return game.getTick() % 20 > 10 ? "#FFFFFF" : "#0000BB";
             } else { 
                 return "#0000BB";
@@ -148,11 +154,11 @@ Pacman.Ghost = function (game, map, colour) {
             top  = (position.y/10) * s,
             left = (position.x/10) * s;
     
-        if (eatable && secondsAgo(eatable) > 8) {
+        if (eatable && secondsAgo(eatable) > fastSeconds(8)) {
             eatable = null;
         }
         
-        if (eaten && secondsAgo(eaten) > 3) { 
+        if (eaten && secondsAgo(eaten) > fastSeconds(3)) { 
             eaten = null;
         }
         
