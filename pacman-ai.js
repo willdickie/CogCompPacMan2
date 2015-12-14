@@ -1,10 +1,10 @@
 var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
 	var SCORERWEIGHTS = {
-		"goForGhost": 0.1,
-		"goForPellet": 0.1,
-		"goForPPellet": 0.3,
-		"runFromGhost": 0.5
+		"goForGhost": 0.102,
+		"goForPellet": 0.199,
+		"goForPPellet": 0.446,
+		"runFromGhost": 0.326
 	};
 	window.OLDGENS = [];
 	var NEWGENS = [];
@@ -35,17 +35,16 @@ var PACAI =  (function (PacmanInternal) {
 			runGeneration([
 			{
 			gameScore: 0,
-			goGhostWeight: .1,
-			goPelletWeight: .2,
-			goPPWeight: .4,
-			runGhostWeight: .3
-			},{
-			gameScore: 0,
 			goGhostWeight: .25,
 			goPelletWeight: .25,
 			goPPWeight: .25,
 			runGhostWeight: .25
-	
+			},{
+			gameScore: 0,
+			goGhostWeight: .102,
+			goPelletWeight: .199,
+			goPPWeight: .446,
+			runGhostWeight: .326
 			}])
 		}
 	}
@@ -53,6 +52,7 @@ var PACAI =  (function (PacmanInternal) {
 	function startGame() {
 		window.isAlive = true;
 		window.DaScore = 0;
+		updateLiveWeights();
 		PacmanInternal.keyDown(virtualKey('N'));
 	}
 	function runGeneration (newScorers) {
@@ -80,6 +80,15 @@ var PACAI =  (function (PacmanInternal) {
 			preventDefault:function(){},
 			stopPropagation:function(){}
 		};
+	}
+	
+	function updateLiveWeights() {
+		if(TRAIN_ON) {
+			SCORERWEIGHTS.goForGhost = NEWGENS[CURRGEN].goGhostWeight;
+			SCORERWEIGHTS.goForPellet = NEWGENS[CURRGEN].goPelletWeight;
+			SCORERWEIGHTS.goForPPellet = NEWGENS[CURRGEN].goPPWeight;
+			SCORERWEIGHTS.runFromGhost = NEWGENS[CURRGEN].runGhostWeight;
+		}
 	}
 	
 	function updateUI() {
@@ -472,6 +481,7 @@ var PACAI =  (function (PacmanInternal) {
 					minPellDist.minVal,
 					minPillDist.minVal
 				))) {
+					console.log(scorers[i]);
 					var direction = doScorer(
 						scorers[i], 
 						graph, 
