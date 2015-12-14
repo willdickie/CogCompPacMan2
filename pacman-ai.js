@@ -51,7 +51,7 @@ var PACAI =  (function (Pacman) {
 			console.log(j);
 		}
 		for(k = 0; k<5;k++){
-			newGeneration.push(createMutation(super1));
+			newGeneration.push(createMutation(super2));
 			console.log(k);
 		}
 		return newGeneration;
@@ -61,12 +61,13 @@ var PACAI =  (function (Pacman) {
 		var mutationRate = 4.2;
 		var rand = Math.random()*100;
 		var temp = [];
-		temp.push([0,[]]);
+		var temp2 = [];
+		temp = [0,[0,0,0]];
 		for(i = 0; i < 3;i++){
 				if(rand < mutationRate){
-					temp[0][i] = tempSuper[0][i] + tempSuper[0][i] * (Math.random() * (.1- -.1) + -.1);
+					temp[1][i] = tempSuper[1][i] + tempSuper[1][i] * (Math.random() * (.1- -.1) + -.1);
 				}else{
-					temp[0][i] = tempSuper[0][i];
+					temp[1][i] = tempSuper[1][i];
 				}
 		}
 		console.log(temp);
