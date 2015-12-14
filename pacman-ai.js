@@ -2,9 +2,9 @@ var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
 	var SCORERWEIGHTS = {
 		"goForGhost": 0,
-		"goForPellet": 1,
-		"goForPPellet": 0,
-		"runFromGhost": 0
+		"goForPellet": 0,
+		"goForPPellet": 0.5,
+		"runFromGhost": 0.5
 	};
 
 	var PILL_TOP_LEFT = {x: 1,y: 2};
@@ -109,9 +109,9 @@ var PACAI =  (function (PacmanInternal) {
 			proxPowerPellet)
 	}
 	function relativeDirection(startPos,nextPos) {
-		if(startPos.x < nextPos.x) return "rightMove";
-		else if(startPos.x > nextPos.x) return "leftMove";
-		else if(startPos.y < nextPos.y) return "downMove";
+		if(startPos.x < nextPos.y) return "rightMove";
+		else if(startPos.x > nextPos.y) return "leftMove";
+		else if(startPos.y < nextPos.x) return "downMove";
 		else return "upMove";
 	}
 	function doScorer (scorerName,aStarMap,currentPos,validDirections,nearestGhost,nearestPellet,nearestPPellet) {
@@ -129,7 +129,6 @@ var PACAI =  (function (PacmanInternal) {
 					aStarMap,
 					aStarMap.grid[currentPos.y][currentPos.x],
 					aStarMap.grid[nearestPellet.y][nearestPellet.x]);
-				console.log(path);
 				var nextStep = relativeDirection(currentPos,path[0]);		
 				return nextStep;
 			},
@@ -145,9 +144,17 @@ var PACAI =  (function (PacmanInternal) {
 				var path = astar.search(
 					aStarMap,
 					aStarMap.grid[currentPos.y][currentPos.x],
-					aStarMap.grid[nearestPellet.y][nearestPellet.x]);
+					aStarMap.grid[nearestGhost.y][nearestGhost.x]);
 				var nextStep = relativeDirection(currentPos,path[0]);
-				if ("upMove" != nextStep && validDirections["upMove"]) {
+				var opposite = "";
+				if(nextStep == "upMove") opposite = "downMove";
+				if(nextStep == "downMove") opposite = "upMove";
+				if(nextStep == "leftMove") opposite = "rightMove";
+				if(nextStep == "rightMove") opposite = "leftMove";
+
+				if (validDirections[opposite]) {
+					return opposite;
+				}else if ("upMove" != nextStep && validDirections["upMove"]){
 					return "upMove";
 				}
 				else if ("rightMove" != nextStep && validDirections["rightMove"]) {
@@ -255,8 +262,8 @@ var PACAI =  (function (PacmanInternal) {
 			for(var j=0; j < pacMap[i].length; j++){
 				if(pacMap[i][j] == Pacman.BISCUIT){
 					var pellet = {
-						x: i,
-						y: j
+						x: j,
+						y: i
 					};
 					//console.log(pellet);
 					pelletCoords.push(pellet);
@@ -297,7 +304,7 @@ var PACAI =  (function (PacmanInternal) {
 		//Get surrounding squares
 		// 0 means square cannot be moved to
 		// 1 means square can be moved to
-		/*var surroundings = {
+		var surroundings = {
 			leftMove:0,
 			rightMove:0,
 			downMove:0,
@@ -318,10 +325,10 @@ var PACAI =  (function (PacmanInternal) {
 		if(userPos.y+1 < pacMap.length && (pacMap[userPos.y+1][userPos.x] != Pacman.WALL 
 			&& pacMap[userPos.y+1][userPos.x] != Pacman.BLOCK)){
 			surroundings.downMove = 1;
-		}*/
+		}
 
 		// Perform scorers fuzzily. Loop until we make a decision
-		while(false) {
+		while(true) {
 			var scorers = ["goForGhost","goForPellet","goForPPellet","runFromGhost"];
 			for(var i=0;i<scorers.length;i++) {
 				if(shouldDo(getWeight(
