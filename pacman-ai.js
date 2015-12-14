@@ -44,26 +44,26 @@ var PACAI =  (function (Pacman) {
 		var newGeneration = [];
 		newGeneration.append(super1);
 		newGeneration.append(super2);
-		for(int i = 0; i<5;i++){
+		for(i = 0; i<5;i++){
 			newGeneration.append(createMutation(super1));
 		}
-		for(int i = 0; i<5;i++){
+		for(i = 0; i<5;i++){
 			newGeneration.append(createMutation(super1))
 
 		}
 		return newGeneration;
 	}
-	function createMutation(super){
+	function createMutation(tempSuper){
 		var mutationRate = 4.2;
 		var rand = Math.random()*100;
-		var temp[];
+		var temp;
 		temp[0] = 0;
 		temp[1] = []
-		for(int i = 0; i < 3;i++){
+		for(i = 0; i < 3;i++){
 				if(rand < mutationRate){
-					temp[1][i] = super[1][i] + super[1][i] * (Math.random() * (.1- -.1) + -.1);
+					temp[1][i] = tempSuper[1][i] + tempSuper[1][i] * (Math.random() * (.1- -.1) + -.1);
 				}else{
-					temp[1][i] = suer[1][i]
+					temp[1][i] = tempSuper[1][i]
 				}
 		}
 		return temp;
