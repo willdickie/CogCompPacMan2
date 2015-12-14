@@ -1,9 +1,13 @@
 var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
-	var PILL_TOP_LEFT = {
-		x: 1,
-		y: 2
+	var SCORERWEIGHTS = {
+		"goForGhost": 0,
+		"goForPellet": 0,
+		"goForPPellet": 0.5,
+		"runFromGhost": 0.5
 	};
+
+	var PILL_TOP_LEFT = {x: 1,y: 2};
 	var PILL_TOP_RIGHT = {
 		x: 17,
 		y: 2
@@ -20,7 +24,6 @@ var PACAI =  (function (PacmanInternal) {
 	
 	function startAI() {
 		startGame();
-		console.log("A")
 	}
 	
 	function startGame() {
@@ -37,7 +40,11 @@ var PACAI =  (function (PacmanInternal) {
 	}
 	
 	function virtualKeyRaw(char) {
-		return {keyCode:char};
+		return {
+			keyCode:char,
+			preventDefault:function(){},
+			stopPropagation:function(){}
+		};
 	}
 	
 	// Convert a 2d array map format to all wall values being 0, rest 1
@@ -53,9 +60,9 @@ var PACAI =  (function (PacmanInternal) {
 						break;
 					}
 				}
-				maprow.push(wall ? 0 : 1)
+				maprow.push(wall ? 0 : 1);
 			}
-			outmap.push(outmap);
+			outmap.push(maprow);
 		}
 		return outmap;
 	}
@@ -70,13 +77,108 @@ var PACAI =  (function (PacmanInternal) {
 		return Math.random() < weight;
 	}
 
-	function getWeight (scorerName, proxGhost,ghostDanger,proxPowerPellet,moveArray) {
-		
-		// body...
+	function getWeight (scorerName,proxGhost,ghostDanger,proxPellet,proxPowerPellet) {
+		var weightConv = {
+			"goForGhost": function(w,pG,gD,pP,pPP) {
+				if (gD) return 0;
+				else {
+					return w*(1/pG);
+				}
+			},
+			"goForPellet": function(w,pG,gD,pP,pPP) {
+				return w*(1/pP);
+			},
+			"goForPPellet": function(w,pG,gD,pP,pPP) {
+				return w*(1/pPP);
+			},
+			"runFromGhost": function(w,pG,gD,pP,pPP) {
+				if (!gD) return 0;
+				else {
+					return w*(1/pG);
+				}
+			}
+		}
+
+		if (!scorerName in weightConv)
+			return 0;
+		return weightConv[scorerName](
+			SCORERWEIGHTS[scorerName],
+			proxGhost,
+			ghostDanger,
+			proxPellet,
+			proxPowerPellet)
 	}
+	function relativeDirection(startPos,nextPos) {
+		if(startPos.x < nextPos.y) return "rightMove";
+		else if(startPos.x > nextPos.y) return "leftMove";
+		else if(startPos.y < nextPos.x) return "downMove";
+		else return "upMove";
+	}
+	function doScorer (scorerName,aStarMap,currentPos,validDirections,nearestGhost,nearestPellet,nearestPPellet) {
+		var scorers = {
+			"goForGhost": function() {
+				var path = astar.search(
+					aStarMap,
+					aStarMap.grid[currentPos.y][currentPos.x],
+					aStarMap.grid[nearestGhost.y][nearestGhost.x]);
+				var nextStep = relativeDirection(currentPos,path[0]);
+				return nextStep;
+			},
+			"goForPellet": function() {
+				var path = astar.search(
+					aStarMap,
+					aStarMap.grid[currentPos.y][currentPos.x],
+					aStarMap.grid[nearestPellet.y][nearestPellet.x]);
+				var nextStep = relativeDirection(currentPos,path[0]);		
+				return nextStep;
+			},
+			"goForPPellet": function() {
+				var path = astar.search(
+					aStarMap,
+					aStarMap.grid[currentPos.y][currentPos.x],
+					aStarMap.grid[nearestPPellet.y][nearestPPellet.x]);
+				var nextStep = relativeDirection(currentPos,path[0]);
+				return nextStep;
+			},
+			"runFromGhost": function() {
+				var path = astar.search(
+					aStarMap,
+					aStarMap.grid[currentPos.y][currentPos.x],
+					aStarMap.grid[nearestGhost.y][nearestGhost.x]);
+				var nextStep = relativeDirection(currentPos,path[0]);
+				var opposite = "";
+				if(nextStep == "upMove") opposite = "downMove";
+				if(nextStep == "downMove") opposite = "upMove";
+				if(nextStep == "leftMove") opposite = "rightMove";
+				if(nextStep == "rightMove") opposite = "leftMove";
+
+				if (validDirections[opposite]) {
+					return opposite;
+				}else if ("upMove" != nextStep && validDirections["upMove"]){
+					return "upMove";
+				}
+				else if ("rightMove" != nextStep && validDirections["rightMove"]) {
+					return "rightMove";
+				}else if ("downMove" != nextStep && validDirections["downMove"]) {
+					return "downMove";
+				}else if ("rightMove" != nextStep && validDirections["rightMove"]) {
+					return "rightMove";
+				}else return nextStep;
+			}
+		}
+		return scorers[scorerName]();
+	}
+	lastPosition = {x:0,y:0};
 	window.onNewMap = function (ghostPos, userPos, ghosts) {
 		// Adjust user position
 		userPos = adjustPositionToBlockSize(userPos);
+
+		// Only run on full steps
+		if(lastPosition.x != userPos.x || lastPosition.y != userPos.y) {
+			lastPosition = userPos;
+		} else {
+			return;
+		}
 				
 		// Collect position and vulnerability state of ghosts
 		var ghostData = [];
@@ -101,6 +203,8 @@ var PACAI =  (function (PacmanInternal) {
 		// Get distances between pacman and each ghost
 		var graph = new Graph(adaptMap(Pacman.MAP,[Pacman.WALL,Pacman.BLOCK]));
 		var ghostDistances = [];
+		var nearestGhost = 0;
+		var shortestGhostDistance = 99999999999999;
 		for(var i=0;i<ghostData.length;i++){
 			var start = graph.grid[userPos.y][userPos.x];
 			var end = graph.grid[ghostData[i].position.y][ghostData[i].position.x];
@@ -109,6 +213,10 @@ var PACAI =  (function (PacmanInternal) {
 				distance: result.length,
 				vulnerable: ghostData[i].vulnerable
 			};
+			if (dist.distance < shortestGhostDistance) {
+				shortestGhostDistance = dist.distance;
+				nearestGhost = i;
+			}
 			ghostDistances.push(dist);
 		}
 
@@ -157,6 +265,7 @@ var PACAI =  (function (PacmanInternal) {
 						x: j,
 						y: i
 					};
+					//console.log(pellet);
 					pelletCoords.push(pellet);
 				}
 			}
@@ -185,7 +294,7 @@ var PACAI =  (function (PacmanInternal) {
 			var distPellResult = astar.search(graph, startUser2, endPellet);
 			var distToPell = distPellResult.length;
 			pelletDistances.push(distToPell);
-			if( distToPell <= minPellDist.min ){
+			if( distToPell <= minPellDist.minVal ){
 				minPellDist.minVal = distToPell;
 				minPellDist.x = pelletCoords[i].x;
 				minPellDist.y = pelletCoords[i].y;
@@ -216,6 +325,39 @@ var PACAI =  (function (PacmanInternal) {
 		if(userPos.y+1 < pacMap.length && (pacMap[userPos.y+1][userPos.x] != Pacman.WALL 
 			&& pacMap[userPos.y+1][userPos.x] != Pacman.BLOCK)){
 			surroundings.downMove = 1;
+		}
+
+		// Perform scorers fuzzily. Loop until we make a decision
+		while(true) {
+			var scorers = ["goForGhost","goForPellet","goForPPellet","runFromGhost"];
+			for(var i=0;i<scorers.length;i++) {
+				if(shouldDo(getWeight(
+					scorers[i],
+					shortestGhostDistance,
+					!ghostData[nearestGhost].vulnerable,
+					minPellDist.minVal,
+					minPillDist.minVal
+				))) {
+					var direction = doScorer(
+						scorers[i], 
+						graph, 
+						userPos, 
+						surroundings,
+						ghostData[nearestGhost].position,
+						minPellDist,
+						minPillDist);
+					if (direction == "upMove") {
+						sendDirection(UP);
+					}else if (direction == "downMove") {
+						sendDirection(DOWN);
+					}else if (direction == "rightMove") {
+						sendDirection(RIGHT);
+					}else if (direction == "leftMove") {
+						sendDirection(LEFT);
+					}
+					return direction;
+				}
+			}
 		}
 	}
 	
