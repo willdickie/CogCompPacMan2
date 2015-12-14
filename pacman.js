@@ -130,10 +130,8 @@ Pacman.Ghost = function (game, map, colour) {
         return (game.getTick() - tick) / Pacman.FPS;
     };
     function fastSeconds (seconds) {
-        
-        var value = ( 30/Pacman.FPS) * seconds; 
-        console.log(seconds  +" " + value)
-        return  value;
+        var value = ( 30/Pacman.FPS) * seconds;
+        return value;
     }
 
     function getColour() { 
@@ -990,12 +988,11 @@ var PACMAN = (function () {
             stateChanged = false;
             map.draw(ctx);
             dialog("Press N to start a New game");            
-        } else if (state === EATEN_PAUSE && 
-                   (tick - timerStart) > (Pacman.FPS / 3)) {
+        } else if (state === EATEN_PAUSE) {
             map.draw(ctx);
             setState(PLAYING);
         } else if (state === DYING) {
-            if (tick - timerStart > (Pacman.FPS * 2)) { 
+            if (tick - timerStart > (Pacman.FPS * 0.25)) { 
                 loseLife();
             } else { 
                 redrawBlock(userPos);
@@ -1003,7 +1000,7 @@ var PACMAN = (function () {
                     redrawBlock(ghostPos[i].old);
                     ghostPos.push(ghosts[i].draw(ctx));
                 }                                   
-                user.drawDead(ctx, (tick - timerStart) / (Pacman.FPS * 2));
+                user.drawDead(ctx, (tick - timerStart) / (Pacman.FPS * 0.25));
             }
         } else if (state === COUNTDOWN) {
             map.draw(ctx);

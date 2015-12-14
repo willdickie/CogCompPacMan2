@@ -9,6 +9,8 @@ var PACAI =  (function (PacmanInternal) {
 	window.OLDGENS = [];
 	var NEWGENS = [];
 	var CURRGEN = 0;
+	var BESTGEN = {"gameScore":0};
+	var TOTGEN = 0;
 	var TRAIN_ON = true;
 	var PILL_TOP_LEFT = {x: 1,y: 2};
 	var PILL_TOP_RIGHT = {
@@ -59,6 +61,7 @@ var PACAI =  (function (PacmanInternal) {
 		}
 		NEWGENS = newScorers;
 		CURRGEN = 0;
+		TOTGEN += 1;
 		startGame()
 	}
 	
@@ -78,6 +81,31 @@ var PACAI =  (function (PacmanInternal) {
 			stopPropagation:function(){}
 		};
 	}
+	
+	function updateUI() {
+		var getElm = document.getElementById.bind(document);
+		if(NEWGENS[CURRGEN].gameScore > BESTGEN.gameScore || BESTGEN.gameScore == 0) {
+			BESTGEN = JSON.parse(JSON.stringify(NEWGENS[CURRGEN]));
+		}
+		
+		getElm("bestGoGhost").innerHTML = BESTGEN.goGhostWeight.toFixed(3);
+		getElm("bestGoPellet").innerHTML = BESTGEN.goPelletWeight.toFixed(3);
+		getElm("bestGoPP").innerHTML = BESTGEN.goPPWeight.toFixed(3);
+		getElm("bestRunGhost").innerHTML = BESTGEN.runGhostWeight.toFixed(3);
+		getElm("bestScore").innerHTML = BESTGEN.gameScore;
+		
+		getElm("curGoGhost").innerHTML = NEWGENS[CURRGEN].goGhostWeight.toFixed(3);
+		getElm("curGoPellet").innerHTML = NEWGENS[CURRGEN].goPelletWeight.toFixed(3);
+		getElm("curGoPP").innerHTML = NEWGENS[CURRGEN].goPPWeight.toFixed(3);
+		getElm("curRunGhost").innerHTML = NEWGENS[CURRGEN].runGhostWeight.toFixed(3);
+		getElm("curScore").innerHTML = NEWGENS[CURRGEN].gameScore;
+		
+		getElm("totIter").innerHTML = CURRGEN + OLDGENS.length + 1;
+		getElm("curGen").innerHTML = TOTGEN;
+		getElm("curIter").innerHTML = CURRGEN + 1;
+		getElm("genSize").innerHTML = NEWGENS.length;
+	}
+	
 	function selectSuper(scores) {
 		var tempArray = scores;
 		tempArray.sort(sortFunction);
@@ -88,14 +116,13 @@ var PACAI =  (function (PacmanInternal) {
 	}
 	
 	function createNewGeneration(super1, super2){
-		
 		var newGeneration = [];
 		newGeneration.push(super1);
 		newGeneration.push(super2);
-		for(j = 0; j<2;j++){
+		for(var j = 0; j<2;j++){
 			newGeneration.push(createMutation(super1));
 		}
-		for(k = 0; k<2;k++){
+		for(var k = 0; k<2;k++){
 			newGeneration.push(createMutation(super2));
 		}
 		return newGeneration;
@@ -164,34 +191,30 @@ var PACAI =  (function (PacmanInternal) {
 
 	function getWeight (scorerName,proxGhost,ghostDanger,proxPellet,proxPowerPellet) {
 		var weightConv = {
-			"goForGhost": function(w,pG,gD,pP,pPP) {
-				if (gD) return 0;
+			"goForGhost": function(w) {
+				if (ghostDanger) return 0;
 				else {
-					return w*(1/pG);
+					return w*(1/proxGhost);
 				}
 			},
-			"goForPellet": function(w,pG,gD,pP,pPP) {
-				return w*(1/pP);
+			"goForPellet": function(w) {
+				if (proxPellet == Infinity) return 0;
+				return w*(1/proxPellet);
 			},
-			"goForPPellet": function(w,pG,gD,pP,pPP) {
-				return w*(1/pPP);
+			"goForPPellet": function(w) {
+				if (proxPowerPellet == Infinity || !ghostDanger) return 0;
+				return w*(1/proxPowerPellet);
 			},
-			"runFromGhost": function(w,pG,gD,pP,pPP) {
-				if (!gD) return 0;
+			"runFromGhost": function(w) {
+				if (!ghostDanger) return 0;
 				else {
-					return w*(1/pG);
+					return w*(1/proxGhost);
 				}
 			}
 		}
 
-		if (!scorerName in weightConv)
-			return 0;
-		return weightConv[scorerName](
-			SCORERWEIGHTS[scorerName],
-			proxGhost,
-			ghostDanger,
-			proxPellet,
-			proxPowerPellet)
+		if (!(scorerName in weightConv)) return 0;
+		return weightConv[scorerName](SCORERWEIGHTS[scorerName]);
 	}
 	function relativeDirection(startPos,nextPos) {
 		if(nextPos == undefined) return "downMove";
@@ -242,42 +265,35 @@ var PACAI =  (function (PacmanInternal) {
 
 				if (validDirections[opposite]) {
 					return opposite;
-				}else if ("upMove" != nextStep && validDirections["upMove"]){
-					return "upMove";
-				}
-				else if ("rightMove" != nextStep && validDirections["rightMove"]) {
-					return "rightMove";
-				}else if ("downMove" != nextStep && validDirections["downMove"]) {
-					return "downMove";
-				}else if ("rightMove" != nextStep && validDirections["rightMove"]) {
-					return "rightMove";
-				}else return nextStep;
+				}else return scorers.goForPellet();
 			}
 		}
 		return scorers[scorerName]();
 	}
-	lastPosition = {x:0,y:0};
+	var lastPosition = {x:0,y:0};
 	window.onDeath = function(){
 		if (TRAIN_ON) {
 			if (!window.isAlive) {
 				NEWGENS[CURRGEN].gameScore = window.DaScore;
-
+				updateUI();
 				CURRGEN++;
 
 				if (CURRGEN != NEWGENS.length) {
 					startGame();
 				}
 				else {
-					console.log("scores is " + window.DaScore);
-					console.log(" Weights are " + NEWGENS);
 					runGeneration(selectSuper(NEWGENS))
 				}
 
 			};
 		};
 	}
-	window.onNewMap = function (ghostPos, userPos, ghosts) {
 
+	window.onNewMap = function (ghostPos, userPos, ghosts) {
+		if (TRAIN_ON) {
+			NEWGENS[CURRGEN].gameScore = window.DaScore;
+			updateUI();
+		}
 
 		// Adjust user position
 		userPos = adjustPositionToBlockSize(userPos);
@@ -314,7 +330,7 @@ var PACAI =  (function (PacmanInternal) {
 		var graph = new Graph(adaptMap(Pacman.MAP,[Pacman.WALL,Pacman.BLOCK]));
 		var ghostDistances = [];
 		var nearestGhost = 0;
-		var shortestGhostDistance = 99999999999999;
+		var shortestGhostDistance = Infinity;
 		for(var i=0;i<ghostData.length;i++){
 			if(ghostData.length-1 < i || ghostData[i] == undefined) continue;
 			if(ghostData[i].position.x < 0 || ghostData[i].position.x > 18) continue;
@@ -348,9 +364,9 @@ var PACAI =  (function (PacmanInternal) {
 		// Get distances between Pacman and each power pill
 		var pillDistances = [];
 		var minPillDist = {
-			x: 1000000,
-			y: 1000000,
-			minVal: 1000000
+			x: Infinity,
+			y: Infinity,
+			minVal: Infinity
 		};
 		for(var i=0; i<PILLS.length; i++){
 			if( pacMap[PILLS[i].y][PILLS[i].x] == Pacman.PILL ){
@@ -396,9 +412,9 @@ var PACAI =  (function (PacmanInternal) {
 		//Get distances between Pacman and each pellet
 		var pelletDistances = [];
 		var minPellDist = {
-			x: 1000000,
-			y: 1000000,
-			minVal: 1000000
+			x: Infinity,
+			y: Infinity,
+			minVal: Infinity
 		};
 		for(var i=0; i<pelletCoords.length; i++){
 			var startUser2 = graph.grid[userPos.y][userPos.x];
@@ -440,7 +456,7 @@ var PACAI =  (function (PacmanInternal) {
 		}
 
 		// Perform scorers fuzzily. Loop until we make a decision
-		while(true) {
+		while(true){
 			var scorers = ["goForGhost","goForPellet","goForPPellet","runFromGhost"];
 			for(var i=0;i<scorers.length;i++) {
 				if(shouldDo(getWeight(
@@ -458,6 +474,7 @@ var PACAI =  (function (PacmanInternal) {
 						ghostData[nearestGhost].position,
 						minPellDist,
 						minPillDist);
+
 					if (direction == "upMove") {
 						sendDirection(UP);
 					}else if (direction == "downMove") {
@@ -467,6 +484,7 @@ var PACAI =  (function (PacmanInternal) {
 					}else if (direction == "leftMove") {
 						sendDirection(LEFT);
 					}
+					
 					return direction;
 				}
 			}
