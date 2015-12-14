@@ -438,6 +438,12 @@ var PACAI =  (function (PacmanInternal) {
 			downMove:0,
 			upMove:0
 		};
+		if(userPos.y == 10 && userPos.x < 2) {
+			surroundings.leftMove = 1;
+		}
+		if(userPos.y == 10 && userPos.x > 16) {
+			surroundings.rightMove = 1;
+		}
 		if(userPos.x-1 >= 0 && (pacMap[userPos.y][userPos.x-1] != Pacman.WALL 
 			&& pacMap[userPos.y][userPos.x-1] != Pacman.BLOCK)){
 			surroundings.leftMove = 1;
