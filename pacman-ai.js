@@ -1,12 +1,15 @@
 var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
 	var SCORERWEIGHTS = {
-		"goForGhost": 0,
-		"goForPellet": 0,
-		"goForPPellet": 0.5,
+		"goForGhost": 0.1,
+		"goForPellet": 0.1,
+		"goForPPellet": 0.3,
 		"runFromGhost": 0.5
 	};
-
+	window.OLDGENS = [];
+	var NEWGENS = [];
+	var CURRGEN = 0;
+	var TRAIN_ON = true;
 	var PILL_TOP_LEFT = {x: 1,y: 2};
 	var PILL_TOP_RIGHT = {
 		x: 17,
@@ -23,11 +26,40 @@ var PACAI =  (function (PacmanInternal) {
 	var PILLS = [PILL_TOP_LEFT, PILL_TOP_RIGHT, PILL_BOT_LEFT, PILL_BOT_RIGHT];
 	
 	function startAI() {
-		startGame();
+		if(!TRAIN_ON) {
+			startGame();
+		}
+		else{
+			runGeneration([
+			{
+			gameScore: 0,
+			goGhostWeight: .1,
+			goPelletWeight: .2,
+			goPPWeight: .4,
+			runGhostWeight: .3
+			},{
+			gameScore: 0,
+			goGhostWeight: .25,
+			goPelletWeight: .25,
+			goPPWeight: .25,
+			runGhostWeight: .25
+	
+			}])
+		}
 	}
 	
 	function startGame() {
+		window.isAlive = true;
+		window.DaScore = 0;
 		PacmanInternal.keyDown(virtualKey('N'));
+	}
+	function runGeneration (newScorers) {
+		for (var i = 0; i < NEWGENS.length; i++) {
+			 OLDGENS.push(NEWGENS[i]);
+		}
+		NEWGENS = newScorers;
+		CURRGEN = 0;
+		startGame()
 	}
 	
 	function sendDirection(direction) {
@@ -46,7 +78,60 @@ var PACAI =  (function (PacmanInternal) {
 			stopPropagation:function(){}
 		};
 	}
+	function selectSuper(scores) {
+		var tempArray = scores;
+		tempArray.sort(sortFunction);
+		var super1 = tempArray[0];
+		var super2 = tempArray[1];
+		var newGen = createNewGeneration(super1,super2);
+		return newGen;
+	}
 	
+	function createNewGeneration(super1, super2){
+		
+		var newGeneration = [];
+		newGeneration.push(super1);
+		newGeneration.push(super2);
+		for(j = 0; j<2;j++){
+			newGeneration.push(createMutation(super1));
+		}
+		for(k = 0; k<2;k++){
+			newGeneration.push(createMutation(super2));
+		}
+		return newGeneration;
+	}
+	function sortFunction(a, b) {
+	    if (a.gameScore === b.gameScore) {
+	        return 0;
+	    }
+	    else {
+	        return (a.gameScore > b.gameScore) ? -1 : 1;
+	    }
+	}
+	function createMutation(tempSuper){
+		var mutationRate = 60;
+		var rand = Math.random()*100;
+		var temp = {
+			gameScore: 0,
+			goGhostWeight: 0,
+			goPelletWeight: 0,
+			goPPWeight: 0,
+			runGhostWeight: 0
+			};
+		if(rand < mutationRate){
+			temp.goGhostWeight = tempSuper.goGhostWeight + tempSuper.goGhostWeight * (Math.random() * (.1- -.1) + -.1);
+			temp.goPelletWeight = tempSuper.goPelletWeight + tempSuper.goPelletWeight * (Math.random() * (.1- -.1) + -.1);
+			temp.goPPWeight = tempSuper.goPPWeight + tempSuper.goPPWeight * (Math.random() * (.1- -.1) + -.1);
+			temp.runGhostWeight = tempSuper.runGhostWeight + tempSuper.runGhostWeight * (Math.random() * (.1- -.1) + -.1);
+			}
+		else{
+			temp.goGhostWeight = tempSuper.goGhostWeight;
+			temp.goPelletWeight = tempSuper.goPelletWeight;
+			temp.goPPWeight = tempSuper.goPPWeight;
+			temp.runGhostWeight = tempSuper.runGhostWeight;
+		}
+		return temp;
+		}
 	// Convert a 2d array map format to all wall values being 0, rest 1
 	function adaptMap(map,walls) {
 		var outmap = [];
@@ -109,6 +194,7 @@ var PACAI =  (function (PacmanInternal) {
 			proxPowerPellet)
 	}
 	function relativeDirection(startPos,nextPos) {
+		if(nextPos == undefined) return "downMove";
 		if(startPos.x < nextPos.y) return "rightMove";
 		else if(startPos.x > nextPos.y) return "leftMove";
 		else if(startPos.y < nextPos.x) return "downMove";
@@ -117,6 +203,7 @@ var PACAI =  (function (PacmanInternal) {
 	function doScorer (scorerName,aStarMap,currentPos,validDirections,nearestGhost,nearestPellet,nearestPPellet) {
 		var scorers = {
 			"goForGhost": function() {
+				if(nearestGhost == undefined) return "downMove";
 				var path = astar.search(
 					aStarMap,
 					aStarMap.grid[currentPos.y][currentPos.x],
@@ -141,6 +228,7 @@ var PACAI =  (function (PacmanInternal) {
 				return nextStep;
 			},
 			"runFromGhost": function() {
+				if(nearestGhost == undefined) return "downMove";
 				var path = astar.search(
 					aStarMap,
 					aStarMap.grid[currentPos.y][currentPos.x],
@@ -169,7 +257,28 @@ var PACAI =  (function (PacmanInternal) {
 		return scorers[scorerName]();
 	}
 	lastPosition = {x:0,y:0};
+	window.onDeath = function(){
+		if (TRAIN_ON) {
+			if (!window.isAlive) {
+				NEWGENS[CURRGEN].gameScore = window.DaScore;
+
+				CURRGEN++;
+
+				if (CURRGEN != NEWGENS.length) {
+					startGame();
+				}
+				else {
+					console.log("scores is " + window.DaScore);
+					console.log(" Weights are " + NEWGENS);
+					runGeneration(selectSuper(NEWGENS))
+				}
+
+			};
+		};
+	}
 	window.onNewMap = function (ghostPos, userPos, ghosts) {
+
+
 		// Adjust user position
 		userPos = adjustPositionToBlockSize(userPos);
 
@@ -184,6 +293,7 @@ var PACAI =  (function (PacmanInternal) {
 		var ghostData = [];
 		for(var i=0;i<ghosts.length;i++){
 			var ghost = {}
+			if(ghostPos.length -1 < i || ghostPos[i] == undefined) continue;
 			ghost.position = adjustPositionToBlockSize(ghostPos[i].new);
 			ghost.vulnerable = ghosts[i].isVunerable();
 			ghostData.push(ghost);
@@ -206,6 +316,8 @@ var PACAI =  (function (PacmanInternal) {
 		var nearestGhost = 0;
 		var shortestGhostDistance = 99999999999999;
 		for(var i=0;i<ghostData.length;i++){
+			if(ghostData.length-1 < i || ghostData[i] == undefined) continue;
+			if(ghostData[i].position.x < 0 || ghostData[i].position.x > 18) continue;
 			var start = graph.grid[userPos.y][userPos.x];
 			var end = graph.grid[ghostData[i].position.y][ghostData[i].position.x];
 			var result = astar.search(graph, start, end);
