@@ -1,9 +1,9 @@
 var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
 	var SCORERWEIGHTS = {
-		"goForGhost": 0,
-		"goForPellet": 0,
-		"goForPPellet": 0.5,
+		"goForGhost": 0.1,
+		"goForPellet": 0.1,
+		"goForPPellet": 0.3,
 		"runFromGhost": 0.5
 	};
 
@@ -23,11 +23,21 @@ var PACAI =  (function (PacmanInternal) {
 	var PILLS = [PILL_TOP_LEFT, PILL_TOP_RIGHT, PILL_BOT_LEFT, PILL_BOT_RIGHT];
 	
 	function startAI() {
+		tempS = [[10,[1,1,1,1]],[5,[2,2,2,2]]];
+		selectSuper(tempS);
 		startGame();
 	}
 	
 	function startGame() {
+		window.isAlive = true;
+		window.DaScore = 0;
 		PacmanInternal.keyDown(virtualKey('N'));
+	}
+	function runGeneration (newScorers) {
+		for (var i = 0; i < newScorers.length; i++) {
+			SCORERWEIGHTS.goForGhost = newScorers[i][0]
+			
+		};
 	}
 	
 	function sendDirection(direction) {
@@ -46,7 +56,53 @@ var PACAI =  (function (PacmanInternal) {
 			stopPropagation:function(){}
 		};
 	}
-	
+	function selectSuper(scores) {
+		var tempArray = scores;
+		tempArray.sort(sortFunction);
+		var super1 = tempArray[0];
+		var super2 = tempArray[1];
+		var newGen = createNewGeneration(super1,super2);
+		//reRun(newGen);
+	}
+	function sortFunction(a, b) {
+	    if (a[0] === b[0]) {
+	        return 0;
+	    }
+	    else {
+	        return (a[0] > b[0]) ? -1 : 1;
+	    }
+	}
+	function createNewGeneration(super1, super2){
+		
+		var newGeneration = [];
+		newGeneration.push(super1);
+		newGeneration.push(super2);
+		for(j = 0; j<5;j++){
+			newGeneration.push(createMutation(super1));
+			console.log(j);
+		}
+		for(k = 0; k<5;k++){
+			newGeneration.push(createMutation(super2));
+			console.log(k);
+		}
+		return newGeneration;
+	}
+	function createMutation(tempSuper){
+		console.log(tempSuper);
+		var mutationRate = 4.2;
+		var rand = Math.random()*100;
+		var temp = [];
+		temp.push([0,[]]);
+		for(i = 0; i < 4;i++){
+				if(rand < mutationRate){
+					temp[0][i] = tempSuper[0][i] + tempSuper[0][i] * (Math.random() * (.1- -.1) + -.1);
+				}else{
+					temp[0][i] = tempSuper[0][i];
+				}
+		}
+		console.log(temp);
+		return temp;
+	}
 	// Convert a 2d array map format to all wall values being 0, rest 1
 	function adaptMap(map,walls) {
 		var outmap = [];

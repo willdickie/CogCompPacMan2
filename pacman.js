@@ -302,6 +302,7 @@ Pacman.User = function (game, map) {
     };
 
     function theScore() { 
+        window.DaScore = score;
         return score;
     };
 
@@ -315,7 +316,7 @@ Pacman.User = function (game, map) {
 
     function initUser() {
         score = 0;
-        lives = 3;
+        lives = 1;
         newLevel();
     }
     
@@ -865,6 +866,7 @@ var PACMAN = (function () {
     function loseLife() {        
         setState(WAITING);
         user.loseLife();
+        window.isAlive = false;
         if (user.getLives() > 0) {
             startLevel();
         }
