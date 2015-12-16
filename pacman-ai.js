@@ -1,10 +1,10 @@
 var PACAI =  (function (PacmanInternal) {
 	var LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
 	var SCORERWEIGHTS = {
-		"goForGhost": 0.102,
-		"goForPellet": 0.199,
-		"goForPPellet": 0.446,
-		"runFromGhost": 0.326
+		"goForGhost": 0.001,
+		"goForPellet": 0.209,
+		"goForPPellet": 0.003,
+		"runFromGhost": 0.816
 	};
 	window.OLDGENS = [];
 	var NEWGENS = [];
@@ -35,16 +35,16 @@ var PACAI =  (function (PacmanInternal) {
 			runGeneration([
 			{
 			gameScore: 0,
-			goGhostWeight: .25,
-			goPelletWeight: .25,
-			goPPWeight: .25,
-			runGhostWeight: .25
+			goGhostWeight: .35,
+			goPelletWeight: .20,
+			goPPWeight: .35,
+			runGhostWeight: .10
 			},{
 			gameScore: 0,
-			goGhostWeight: .102,
-			goPelletWeight: .199,
-			goPPWeight: .446,
-			runGhostWeight: .326
+			goGhostWeight: .001,
+			goPelletWeight: .209,
+			goPPWeight: .003,
+			runGhostWeight: .816
 			}])
 		}
 	}
@@ -223,6 +223,7 @@ var PACAI =  (function (PacmanInternal) {
 		}
 
 		if (!(scorerName in weightConv)) return 0;
+		console.log(scorerName+":"+weightConv[scorerName](SCORERWEIGHTS[scorerName]))
 		return weightConv[scorerName](SCORERWEIGHTS[scorerName]);
 	}
 	function relativeDirection(startPos,nextPos) {
@@ -472,7 +473,7 @@ var PACAI =  (function (PacmanInternal) {
 
 		// Perform scorers fuzzily. Loop until we make a decision
 		while(true){
-			var scorers = ["goForGhost","goForPellet","goForPPellet","runFromGhost"];
+			var scorers = ["runFromGhost","goForPellet","goForGhost","goForPPellet"];
 			for(var i=0;i<scorers.length;i++) {
 				if(shouldDo(getWeight(
 					scorers[i],
